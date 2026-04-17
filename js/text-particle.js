@@ -27,6 +27,9 @@
         returnSpeed: options.returnSpeed || 0.05,
         pushForce: options.pushForce || 4,
         backgroundColor: options.backgroundColor || 'transparent',
+        ambientMode: options.ambientMode || false,
+        ambientIntensity: options.ambientIntensity || 6,
+        ambientSpeed: options.ambientSpeed || 0.008,
       };
 
       this.canvas = null;
@@ -35,6 +38,7 @@
       this.mouse = { x: null, y: null };
       this.animationId = null;
       this.isRunning = false;
+      this.time = 0;
       this.dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       this._init();
@@ -62,10 +66,14 @@
       this._boundTouchEnd = this._onMouseLeave.bind(this);
 
       window.addEventListener('resize', this._boundResize);
-      this.canvas.addEventListener('mousemove', this._boundMouseMove, { passive: true });
-      this.canvas.addEventListener('mouseleave', this._boundMouseLeave);
-      this.canvas.addEventListener('touchmove', this._boundTouchMove, { passive: true });
-      this.canvas.addEventListener('touchend', this._boundTouchEnd);
+
+      // Only attach mouse/touch interaction when NOT in ambient mode
+      if (!this.options.ambientMode) {
+        this.canvas.addEventListener('mousemove', this._boundMouseMove, { passive: true });
+        this.canvas.addEventListener('mouseleave', this._boundMouseLeave);
+        this.canvas.addEventListener('touchmove', this._boundTouchMove, { passive: true });
+        this.canvas.addEventListener('touchend', this._boundTouchEnd);
+      }
 
       // Start
       this._initParticles();
@@ -153,34 +161,62 @@
         const mouseRadius = this.options.mouseRadius;
         const returnSpeed = this.options.returnSpeed;
         const pushForce = this.options.pushForce;
+        const isAmbient = this.options.ambientMode;
+        const ambientIntensity = this.options.ambientIntensity;
+        const ambientSpeed = this.options.ambientSpeed;
+
+        this.time += 1;
 
         for (let i = 0; i < this.particles.length; i++) {
           const p = this.particles[i];
 
-          if (mouseX !== null && mouseY !== null) {
-            const dx = mouseX - p.x;
-            const dy = mouseY - p.y;
-            const distSq = dx * dx + dy * dy;
-            const radiusSq = mouseRadius * mouseRadius;
+          if (isAmbient) {
+            // Ambient mode: gentle wave displacement
+            const t = this.time * ambientSpeed;
+            const offsetX = Math.sin(t + p.baseX * 0.015 + p.baseY * 0.01) * ambientIntensity;
+            const offsetY = Math.cos(t * 0.7 + p.baseY * 0.012 + p.baseX * 0.008) * ambientIntensity * 0.8;
 
-            if (distSq < radiusSq) {
-              const dist = Math.sqrt(distSq);
-              const forceX = (dx / dist) * pushForce;
-              const forceY = (dy / dist) * pushForce;
-              p.x -= forceX;
-              p.y -= forceY;
+            p.x = p.baseX + offsetX;
+            p.y = p.baseY + offsetY;
+
+            // Subtle shimmer: vary opacity per particle
+            const shimmer = 0.55 + 0.45 * Math.sin(t * 1.2 + i * 0.05);
+            const baseColor = this.options.particleColor;
+
+            // Draw with shimmer
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.globalAlpha = shimmer;
+            this.ctx.fillStyle = baseColor;
+            this.ctx.fill();
+            this.ctx.globalAlpha = 1;
+          } else {
+            // Normal interactive mode
+            if (mouseX !== null && mouseY !== null) {
+              const dx = mouseX - p.x;
+              const dy = mouseY - p.y;
+              const distSq = dx * dx + dy * dy;
+              const radiusSq = mouseRadius * mouseRadius;
+
+              if (distSq < radiusSq) {
+                const dist = Math.sqrt(distSq);
+                const forceX = (dx / dist) * pushForce;
+                const forceY = (dy / dist) * pushForce;
+                p.x -= forceX;
+                p.y -= forceY;
+              }
             }
+
+            // Return to base position
+            p.x += (p.baseX - p.x) * returnSpeed;
+            p.y += (p.baseY - p.y) * returnSpeed;
+
+            // Draw
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fillStyle = p.color;
+            this.ctx.fill();
           }
-
-          // Return to base position
-          p.x += (p.baseX - p.x) * returnSpeed;
-          p.y += (p.baseY - p.y) * returnSpeed;
-
-          // Draw
-          this.ctx.beginPath();
-          this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          this.ctx.fillStyle = p.color;
-          this.ctx.fill();
         }
 
         this.animationId = requestAnimationFrame(loop);
