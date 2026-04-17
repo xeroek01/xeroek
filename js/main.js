@@ -32,27 +32,25 @@
     // Responsive font size
     const width = window.innerWidth;
     const isMobile = width < 768;
+
+    // On mobile, solid text is shown via CSS — skip particle canvas entirely
+    if (isMobile) return;
+
     let fontSize = 140;
-    if (width < 480) fontSize = 60;
-    else if (width < 768) fontSize = 80;
-    else if (width < 1024) fontSize = 110;
+    if (width < 1024) fontSize = 110;
 
     new TextParticle(container, {
       text: 'XEROEK',
       fontSize: fontSize,
       fontFamily: "'Clash Display', 'Arial Black', sans-serif",
       fontWeight: '600',
-      particleSize: isMobile ? 1.5 : 2,
+      particleSize: 2,
       particleColor: '#e8dcc8',
-      particleDensity: isMobile ? 6 : 4,
-      mouseRadius: isMobile ? 80 : 120,
+      particleDensity: 4,
+      mouseRadius: 120,
       returnSpeed: 0.05,
       pushForce: 3,
       backgroundColor: 'transparent',
-      // Mobile: ambient wave animation instead of touch interaction
-      ambientMode: isMobile,
-      ambientIntensity: 5,
-      ambientSpeed: 0.006,
     });
   }
 
