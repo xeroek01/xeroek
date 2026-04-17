@@ -467,6 +467,11 @@ textarea {
   cursor: default;
 }
 
+/* Solid hero text — hidden on desktop, shown on mobile */
+.hero-title-solid {
+  display: none;
+}
+
 /* Content below particle text */
 .hero-content {
   position: relative;
@@ -965,6 +970,10 @@ textarea {
     grid-template-columns: 1fr;
     gap: var(--sp-12);
   }
+
+  .contact-info {
+    max-width: 100%;
+  }
 }
 
 /* Mobile */
@@ -989,34 +998,62 @@ textarea {
     padding: 0 var(--sp-4);
   }
 
-  /* ── Hero: ambient glow behind particle text ── */
+  /* ── Hero: solid text on mobile instead of particle dots ── */
   #particle-container {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: clamp(180px, 35vh, 320px);
   }
 
+  #particle-container canvas {
+    display: none !important;
+  }
+
+  .hero-title-solid {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(3.2rem, 16vw, 5.5rem);
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+    position: relative;
+    z-index: var(--z-content);
+    animation: heroTextShimmer 4s ease-in-out infinite;
+  }
+
+  /* Ambient glow behind solid text */
   #particle-container::before {
     content: '';
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 70%;
-    height: 60%;
+    width: 80%;
+    height: 70%;
     background: radial-gradient(
       ellipse at center,
-      rgba(232, 220, 200, 0.07) 0%,
-      rgba(232, 220, 200, 0.03) 40%,
+      rgba(232, 220, 200, 0.08) 0%,
+      rgba(232, 220, 200, 0.03) 45%,
       transparent 70%
     );
     border-radius: 50%;
     pointer-events: none;
-    z-index: -1;
+    z-index: 0;
     animation: heroGlowPulse 4s ease-in-out infinite;
   }
 
   @keyframes heroGlowPulse {
     0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
-    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+  }
+
+  @keyframes heroTextShimmer {
+    0%, 100% { opacity: 0.85; text-shadow: 0 0 30px rgba(232, 220, 200, 0.08); }
+    50% { opacity: 1; text-shadow: 0 0 50px rgba(232, 220, 200, 0.15), 0 0 100px rgba(232, 220, 200, 0.05); }
   }
 
   /* ── Services: persistent edge glow, slightly smaller ── */
@@ -1078,11 +1115,14 @@ textarea {
 
   .contact-form {
     order: 1;
+    width: 100%;
   }
 
   .contact-info {
     order: 2;
     margin-top: var(--sp-5);
+    max-width: 100%;
+    width: 100%;
   }
 
   .contact-info .section-title {
