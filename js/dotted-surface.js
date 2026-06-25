@@ -19,9 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const AMOUNTX = 40;
     const AMOUNTY = 60;
 
+    // Read theme colors dynamically
+    const style = getComputedStyle(document.documentElement);
+    const getThemeColor = (varName, fallback) => {
+        const val = style.getPropertyValue(varName).trim();
+        return val ? new THREE.Color(val) : new THREE.Color(fallback);
+    };
+
+    let bgVoidColor = getThemeColor('--bg-void', '#060606');
+    let accentColor = getThemeColor('--accent', '#e8dcc8');
+
     // Scene setup
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x060606, 2000, 10000); // 0x060606 matches --bg-void
+    scene.fog = new THREE.Fog(bgVoidColor, 2000, 10000);
 
     const camera = new THREE.PerspectiveCamera(
         60,
@@ -53,8 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const z = iy * SEPARATION - (AMOUNTY * SEPARATION) / 2;
 
             positions.push(x, y, z);
-            // Beige theme color: var(--accent) = #e8dcc8 -> rgb(232, 220, 200)
-            colors.push(232 / 255, 220 / 255, 200 / 255);
+            colors.push(accentColor.r, accentColor.g, accentColor.b);
         }
     }
 
@@ -114,6 +123,28 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.addEventListener('resize', handleResize);
+
+    // Listen to themechange custom event
+    window.addEventListener('themechange', () => {
+        const newStyle = getComputedStyle(document.documentElement);
+        const newBgVoidHex = newStyle.getPropertyValue('--bg-void').trim() || '#060606';
+        const newAccentHex = newStyle.getPropertyValue('--accent').trim() || '#e8dcc8';
+
+        const newBgVoid = new THREE.Color(newBgVoidHex);
+        const newAccent = new THREE.Color(newAccentHex);
+
+        scene.fog.color.copy(newBgVoid);
+        renderer.setClearColor(scene.fog.color, 0);
+
+        const colorAttribute = geometry.attributes.color;
+        const colorsArray = colorAttribute.array;
+        for (let i = 0; i < colorsArray.length; i += 3) {
+            colorsArray[i] = newAccent.r;
+            colorsArray[i+1] = newAccent.g;
+            colorsArray[i+2] = newAccent.b;
+        }
+        colorAttribute.needsUpdate = true;
+    });
 
     // Start animation
     animate();
