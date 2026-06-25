@@ -258,6 +258,13 @@
         this.canvas.remove();
       }
     }
+
+    updateColor(newColor) {
+      this.options.particleColor = newColor;
+      this.particles.forEach(p => {
+        p.color = newColor;
+      });
+    }
   }
 
   // Expose globally
