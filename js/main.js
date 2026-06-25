@@ -6,10 +6,13 @@
 (function () {
   'use strict';
 
+  let particleInstance = null;
+
   // ---------- DOM Ready ----------
   document.addEventListener('DOMContentLoaded', init);
 
   function init() {
+    initThemeToggle();
     initTextParticle();
     initAOS();
     initNavbar();
@@ -21,6 +24,30 @@
     initContactForm();
   }
 
+  // ---------- Theme Toggle ----------
+  function initThemeToggle() {
+    const toggles = document.querySelectorAll('.theme-toggle');
+    if (!toggles.length) return;
+
+    toggles.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+
+        // Update text particles if active
+        if (particleInstance && typeof particleInstance.updateColor === 'function') {
+          const newAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+          particleInstance.updateColor(newAccent);
+        }
+
+        // Dispatch custom themechange event for dotted-surface.js
+        window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: newTheme } }));
+      });
+    });
+  }
 
   // ---------- Text Particle (Hero) ----------
   function initTextParticle() {
@@ -39,13 +66,15 @@
     let fontSize = 140;
     if (width < 1024) fontSize = 110;
 
-    new TextParticle(container, {
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#e8dcc8';
+
+    particleInstance = new TextParticle(container, {
       text: 'XEROEK',
       fontSize: fontSize,
       fontFamily: "'Clash Display', 'Arial Black', sans-serif",
       fontWeight: '600',
       particleSize: 2,
-      particleColor: '#e8dcc8',
+      particleColor: accentColor,
       particleDensity: 4,
       mouseRadius: 120,
       returnSpeed: 0.05,
