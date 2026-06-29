@@ -246,7 +246,7 @@
 
     // Hover effect on interactive elements
     const interactives = document.querySelectorAll(
-      'a, button, input, textarea, .service-card, .stat-item'
+      'a, button, input, textarea, .service-card, .stat-item, .testimonial-card'
     );
 
     interactives.forEach(el => {
@@ -280,7 +280,7 @@
     // Disable on touch devices
     if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return;
 
-    const cards = document.querySelectorAll('.service-card');
+    const cards = document.querySelectorAll('.service-card, .testimonial-card');
     if (!cards.length) return;
 
     VanillaTilt.init(cards, {
